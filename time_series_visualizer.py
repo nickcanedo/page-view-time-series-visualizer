@@ -40,47 +40,22 @@ def draw_line_plot():
 
 def draw_bar_plot():
     # Copy and modify data for monthly bar plot
-    df_bar = df.copy()
-    df_bar = df_bar.groupby([df_bar.index.year, df_bar.index.month]).mean().rename(columns={"value": "Average Page Views"})
-    df_bar.index.names = ['Years', 'Month']
-    df_bar = df_bar.reset_index()
-    df_bar['Month'] = pd.to_datetime(df_bar['Month'], format='%m').dt.month_name()
+    df_bar = df.copy().reset_index()
+    df_bar['year'] = [d.year for d in df_bar.date]
+    df_bar['month'] = [d.strftime('%B') for d in df_bar.date]
 
+    # It should show average daily page views for each month grouped by year. 
+    df_bar = df_bar.groupby(['year', 'month'])['value'].mean()#.reset_index()
+    df_bar = df_bar.unstack()
+    #columns
+    df_bar.columns = ['January','February','March','April','May','June','July','August','September','October','November','December']
     # Draw bar plot
-    hue_order=['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    g = sns.catplot(
-        data=df_bar,
-        kind='bar',
-        x='Years',
-        y='Average Page Views',
-        hue="Month",
-        hue_order=hue_order,
-        palette=sns.color_palette(),
-        height=6,
-        aspect=1.5
-    )
+    fig = df_bar.plot(kind= 'bar', figsize = (15,10)).figure
 
-    # Get the legend
-    legend = g.legend
-    
-    # Set title of legend
-    legend.set_title("Months")
-
-    # Move legend inside the plot (top-left)
-    legend.set_bbox_to_anchor((0.11, 0.97))
-    legend._loc = 2  # 2 = upper left
-
-    # Add border around the legend
-    legend.set_frame_on(True)
-
-    # Loop over each Axes in the FacetGrid (even if there is only one)
-    for ax in g.axes.flatten():
-        # Enable all spines
-        for spine in ['top', 'right', 'left', 'bottom']:
-            ax.spines[spine].set_visible(True)
-
-    # Save plot to fig variable
-    fig = g.figure
+    plt.title('')
+    plt.xlabel('Years')
+    plt.ylabel('Average Page Views')
+    plt.legend(title= 'Months', fontsize = 15)
 
     # Save image and return fig (don't change this part)
     fig.savefig('bar_plot.png')
